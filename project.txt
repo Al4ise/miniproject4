@@ -1,0 +1,178 @@
+
+-- Students Table
+CREATE TABLE students (
+    student_id INT PRIMARY KEY,
+    student_name VARCHAR(max) NOT NULL,
+    date_of_birth DATE NOT NULL,
+    grade_level INT NOT NULL
+);
+
+-- Courses Table
+CREATE TABLE courses (
+    course_id INT PRIMARY KEY,
+    course_name VARCHAR(max) NOT NULL,
+    course_description TEXT
+);
+
+-- Teachers Table
+CREATE TABLE teachers (
+    teacher_id INT PRIMARY KEY,
+    teacher_name VARCHAR(max) NOT NULL,
+    subject_taught VARCHAR(100) NOT NULL
+);
+
+-- Enrollments Table
+CREATE TABLE enrollments (
+    enrollment_id INT identity(1,1) PRIMARY KEY,
+    student_id INT,
+    course_id INT,
+    teacher_id INT,
+    enrollment_date DATE NOT NULL,
+    FOREIGN KEY (student_id) REFERENCES students(student_id),
+    FOREIGN KEY (course_id) REFERENCES courses(course_id),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id)
+);
+
+-- Insert Students
+INSERT INTO students VALUES
+(1, 'John Doe', '2005-05-15', 10),
+(2, 'Jane Smith', '2006-02-20', 9)
+
+-- Insert Courses
+INSERT INTO courses VALUES
+(101, 'Mathematics', 'Basic math skills'),
+(102, 'History', 'World history overview')
+
+-- Insert Teachers
+INSERT INTO teachers VALUES
+(201, 'Mr. Johnson', 'Mathematics'),
+(202, 'Ms. Davis', 'History')
+
+-- Insert Enrollments (assuming each student enrolls in each course with a random teacher)
+INSERT INTO enrollments (student_id, course_id, teacher_id, enrollment_date)
+SELECT
+    student_id,
+    course_id,
+    teacher_id,
+    GETDATE()
+FROM
+    students, courses, teachers;
+
+-- Insert more Students
+INSERT INTO students VALUES
+(3, 'Alice', '2005-07-30', 10),
+(4, 'Bob', '2006-03-25', 9);
+
+-- Insert more Courses
+INSERT INTO courses VALUES
+(103, 'Science', 'Basic science skills'),
+(104, 'Geography', 'World geography overview');
+
+-- Insert more Teachers
+INSERT INTO teachers VALUES
+(203, 'Mr. Smith', 'Science'),
+(204, 'Ms. Johnson', 'Geography');
+
+-- Insert more Enrollments (assuming each student enrolls in each course with a random teacher)
+INSERT INTO enrollments (student_id, course_id, teacher_id, enrollment_date)
+SELECT
+    student_id,
+    course_id,
+    teacher_id,
+    GETDATE()
+FROM
+    students, courses, teachers
+WHERE
+    students.student_id > 2 AND courses.course_id > 102 AND teachers.teacher_id > 202;
+
+
+-- 1
+SELECT student_name, grade_level
+FROM students;
+
+--2
+SELECT grade_level, COUNT(*) AS total_students
+FROM students
+GROUP BY grade_level;
+
+--3
+SELECT s.student_name
+FROM students s
+JOIN enrollments e ON s.student_id = e.student_id
+JOIN courses c ON e.course_id = c.course_id
+WHERE c.course_name = 'Mathematics';
+
+--4
+SELECT s.student_name, c.course_name, t.teacher_name
+FROM enrollments e
+JOIN students s ON e.student_id = s.student_id
+JOIN courses c ON e.course_id = c.course_id
+JOIN teachers t ON e.teacher_id = t.teacher_id;
+
+--5
+SELECT s.student_name, COUNT(*) AS total_enrollments
+FROM students s
+JOIN enrollments e ON s.student_id = e.student_id
+GROUP BY s.student_name;
+
+--6
+SELECT AVG(grade_level) AS average_grade_level
+FROM students;
+
+--7
+SELECT c.course_name
+FROM courses c
+LEFT JOIN enrollments e ON c.course_id = e.course_id
+WHERE e.enrollment_id IS NULL;
+
+--8
+SELECT s.student_name
+FROM students s
+LEFT JOIN enrollments e ON s.student_id = e.student_id
+WHERE e.enrollment_id IS NULL;
+
+--9
+SELECT t.teacher_name, COUNT(*) AS total_courses
+FROM teachers t
+JOIN enrollments e ON t.teacher_id = e.teacher_id
+GROUP BY t.teacher_name;
+
+--10
+SELECT student_name, grade_level
+FROM students
+WHERE grade_level = (SELECT MAX(grade_level) FROM students);
+
+--11
+SELECT c.course_name, COUNT(*) AS total_students
+FROM courses c
+JOIN enrollments e ON c.course_id = e.course_id
+GROUP BY c.course_name;
+
+--12
+SELECT s.student_name
+FROM students s
+JOIN enrollments e ON s.student_id = e.student_id
+GROUP BY s.student_name
+HAVING COUNT(DISTINCT e.course_id) > 1;
+
+--13
+SELECT AVG(DATEDIFF(YEAR, s.date_of_birth, GETDATE())) AS average_age
+FROM students s
+JOIN enrollments e ON s.student_id = e.student_id
+JOIN courses c ON e.course_id = c.course_id
+WHERE c.course_name = 'History';
+
+--14
+SELECT c.course_name
+FROM courses c
+JOIN enrollments e ON c.course_id = e.course_id
+JOIN teachers t ON e.teacher_id = t.teacher_id
+WHERE t.subject_taught = 'Mathematics';
+
+--15
+SELECT s.grade_level, COUNT(*) AS total_students
+FROM students s
+JOIN enrollments e ON s.student_id = e.student_id
+JOIN courses c ON e.course_id = c.course_id
+WHERE c.course_name = 'Mathematics'
+GROUP BY s.grade_level;
